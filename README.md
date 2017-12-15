@@ -23,6 +23,9 @@ then cd in the repository
 Create (or not ) a virtualenv and then install dependencies.  
 `pip install -r requirements.txt`
 
+Don't forget to give rights to the application to start :  
+`chmod a+x curl_to_requests.py`  
+
 ## Usage:
 
 Usage:  
@@ -31,7 +34,7 @@ Usage:
 which will output a string corresponding to a the Python code for the requests. Just import requests and copy/paste it. 
 
 If you want to see some informations concerning the application just run :  
-`./curl_to_requests --help`
+`./curl_to_requests.py --help`
 
 
 Enjoy !
