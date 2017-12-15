@@ -23,7 +23,7 @@ then cd in the repository
 Create (or not ) a virtualenv and then install dependencies.  
 `pip install -r requirements.txt`
 
-Don't forget to give rights to the application to start :  
+Don't forget to give rights to the application to be executed :  
 `chmod a+x curl_to_requests.py`  
 
 ## Usage:
