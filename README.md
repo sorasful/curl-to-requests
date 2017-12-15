@@ -17,7 +17,7 @@ Stay tuned !
 ## Install : 
 
 Clone the repository :  
-`git clone git@github.com:sorasful/curl-to-requests-.git`  
+`git clone git@github.com:sorasful/curl-to-requests.git`  
 then cd in the repository
 
 Create (or not ) a virtualenv and then install dependencies.  
