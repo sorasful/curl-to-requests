@@ -2,6 +2,7 @@
 
 import argparse
 import re
+import sys
 
 
 class TargetNotFoundException(Exception):
@@ -56,6 +57,14 @@ def extract_datas(command):
 
     return results
 
+def extract_cookies(command):
+    """ Function to extract cookies from curl command. """
+    cookies_pattern = r"-H '[cC]ookie:(.*?)'"
+    cookies = re.search(cookies_pattern, command)
+
+    results = {}
+    # TODO
+    raise NotImplemented
 
 def extract_http_verb(command):
     """ Function to extract the HTTP verb from a curl command. """
@@ -108,11 +117,18 @@ import requests
 {datas_str}
 response = {requests_str}
     """.strip()
-    print(to_return)
     return to_return
+
+def parse_args(args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("command")
+    args = parser.parse_args()
+    return args.command
+
 
 
 if __name__ == "__main__":
     # extract_headers(CURL_EXAMPLES[0])
     # convert_curl_to_requests()
-    pass
+    command = parse_args(sys.argv[1:])
+    print(convert_curl_to_requests(command))

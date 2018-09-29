@@ -6,6 +6,7 @@ from curl_to_requests import (
     extract_http_verb,
     has_datas,
     convert_curl_to_requests,
+    parse_args
 )
 import pytest
 
@@ -110,3 +111,7 @@ response = requests.post('http://lolilol.net/', headers=headers)
 
     # TODO make good looking
     assert convert_curl_to_requests(command) == result
+
+def test_argparse():
+    pass
+    
