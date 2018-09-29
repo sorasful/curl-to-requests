@@ -3,7 +3,7 @@ A simple CLI tool which converts a curl command to a Python requests command.
 
 ## Features 
 
-Requires Python3.5+
+Requires Python3.6+
 
 Supported features :
 - all HTTP verbs
@@ -19,9 +19,6 @@ Stay tuned !
 Clone the repository :  
 `git clone git@github.com:sorasful/curl-to-requests.git`  
 then cd in the repository
-
-Create (or not ) a virtualenv and then install dependencies.  
-`pip install -r requirements.txt`
 
 Don't forget to give rights to the application to be executed :  
 `chmod a+x curl_to_requests.py`  

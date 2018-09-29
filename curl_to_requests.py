@@ -1,15 +1,73 @@
-#!/usr/bin/env python
-import click
+#!/usr/bin/env python3
+
+import argparse
 import re
 
 
-REGEX_ADDRESS = r"curl '[\w:\/\.0;9-]+'|-X ?POST\s?'?\s?[\w:\/]+'?"
-REGEX_HEADERS = r"""(-H ?(?:'|")[\w\s\\\/\.,;:\-\+=()\*]+)"""
-REGEX_DATAS = r"""(-d|--data)( ?'[\w\s{":\.,}]+')"""
-REGEX_VERB = r"""-X [\w]+"""
+class TargetNotFoundException(Exception):
+    """Should be returned when no target url was found."""
+    pass
 
-@click.command()
-@click.argument('command')
+
+def extract_target_url(command):
+    """ Function used to find the target url of the curl command. """
+    address_pattern = r"curl\s+'(.*?)'"
+    address = re.search(address_pattern, command)
+    if address is not None:
+        return address.group(1)
+    raise TargetNotFoundException('Target url not found in curl command.')
+
+
+def extract_headers(command):
+    """ Function used to extract headers from curl command. """
+    headers_pattern = r"(-H\s*'((?![cC]ookie).*?)')"
+    headers = re.findall(headers_pattern, command)
+    
+    results = {}
+    for _, header in headers:
+        print(header)
+        k, v = header.split(':', 1)
+        results[k] = v.strip()
+
+    return results
+
+def has_datas(command):
+    """ Function to determine if there is data in the curl command, even if the datas are empty 
+    or only if there is --data or -d without something next to it."""
+    has_datas_pattern = r"(-d|--data)"
+    has_datas = re.search(has_datas_pattern, command)
+    return True if has_datas else False
+
+
+def extract_datas(command):
+    """ Function to get parameters of the curl command. """
+    results = {}
+    if not has_datas(command):
+        return results    
+    datas_pattern = r"""(-d|--data)\s*['"](.*?)['"]"""
+    datas = re.search(datas_pattern, command)
+    
+    if datas is not None:
+        _, params = datas.groups()
+        for p in params.split('&'):
+            key, value = p.split('=', 1)
+            results[key] = value
+
+    return results
+
+def extract_http_verb(command):
+    """ Function to extract the HTTP verb from a curl command. """
+    http_verb_pattern = r"-X\s*([a-zA-Z]+)"
+    verb = re.search(http_verb_pattern, command)
+
+    if verb is not None:
+        return str(verb.group(1)).lower()
+    elif verb is None and has_datas(command):
+        return 'post'
+    else:
+        return 'get'
+    
+
 def convert_curl_to_requests(command):
     """
     Take a curl command enclosed in triple quotes as parameter and return the str of the python to implement directly copy and paste.
@@ -23,36 +81,29 @@ def convert_curl_to_requests(command):
     requests.get(url='http://example.com/',   headers={'Accept-\n  Encoding': 'gzip, deflate'}, )
     """
 
-    address = ""
-    verb = "get" # By default when you don't precise to curl we use get
-    datas = ""
-    headers = ""
+    url = extract_target_url(command)
+    headers = extract_headers(command)
+    datas = extract_datas(command)
+    verb = extract_http_verb(command)
+    
+    headers_str = f"headers = {str(headers)}" if headers else ""
+    datas_str = f"datas = {str(datas)}" if datas else ""
+    requests_str = f"request.{verb}('{url}'%s%s)".strip() % (', headers=headers' if headers else '',
+                                                       ', data=datas' if datas else '' )
 
-    r_address = re.findall(REGEX_ADDRESS, command)
-    if r_address:
-        address = r_address[0].split(' ')[-1].strip("'")
+    to_return = f"""
+import requests
 
+{headers_str}
+{datas_str}
 
-    r_headers = re.findall(REGEX_HEADERS, command)
-    if r_headers:
-        headers_k_v = [header.split(': ') for header in r_headers]
-        headers = {key.replace('-H ', '').replace('"', '').replace("'", ''): value.replace('"', '').replace("'", '') for key, value in  headers_k_v}
-        headers_display = "headers={0}, ".format(headers)
+{requests_str}
 
-    r_datas = [x[1] for x in re.findall(REGEX_DATAS, command)]
-    if r_datas:
-        datas = "data={0}, ".format(r_datas[0].replace("'", ''))
-
-    r_verb = re.findall(REGEX_VERB, command)
-    if r_verb:
-        verb = r_verb[0].replace('-X ', '').lower()
-
-    address_display = "'{0}', ".format(address if not None else "")
-    output = "requests.{0}(url={1} {2} {3})".format(verb, address_display, datas if datas else "", headers_display if headers else "")
-
-    print(output)
-    return output
-
+    """.strip()
+    print(to_return)
+    return to_return
 
 if __name__ == "__main__":
-    convert_curl_to_requests()
+    # extract_headers(CURL_EXAMPLES[0])
+    # convert_curl_to_requests()
+    pass
