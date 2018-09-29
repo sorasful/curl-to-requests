@@ -6,6 +6,7 @@ import re
 
 class TargetNotFoundException(Exception):
     """Should be returned when no target url was found."""
+
     pass
 
 
@@ -15,21 +16,21 @@ def extract_target_url(command):
     address = re.search(address_pattern, command)
     if address is not None:
         return address.group(1)
-    raise TargetNotFoundException('Target url not found in curl command.')
+    raise TargetNotFoundException("Target url not found in curl command.")
 
 
 def extract_headers(command):
     """ Function used to extract headers from curl command. """
     headers_pattern = r"(-H\s*'((?![cC]ookie).*?)')"
     headers = re.findall(headers_pattern, command)
-    
+
     results = {}
     for _, header in headers:
-        print(header)
-        k, v = header.split(':', 1)
+        k, v = header.split(":", 1)
         results[k] = v.strip()
 
     return results
+
 
 def has_datas(command):
     """ Function to determine if there is data in the curl command, even if the datas are empty 
@@ -43,17 +44,18 @@ def extract_datas(command):
     """ Function to get parameters of the curl command. """
     results = {}
     if not has_datas(command):
-        return results    
+        return results
     datas_pattern = r"""(-d|--data)\s*['"](.*?)['"]"""
     datas = re.search(datas_pattern, command)
-    
+
     if datas is not None:
         _, params = datas.groups()
-        for p in params.split('&'):
-            key, value = p.split('=', 1)
+        for p in params.split("&"):
+            key, value = p.split("=", 1)
             results[key] = value
 
     return results
+
 
 def extract_http_verb(command):
     """ Function to extract the HTTP verb from a curl command. """
@@ -63,10 +65,10 @@ def extract_http_verb(command):
     if verb is not None:
         return str(verb.group(1)).lower()
     elif verb is None and has_datas(command):
-        return 'post'
+        return "post"
     else:
-        return 'get'
-    
+        return "get"
+
 
 def convert_curl_to_requests(command):
     """
@@ -85,23 +87,30 @@ def convert_curl_to_requests(command):
     headers = extract_headers(command)
     datas = extract_datas(command)
     verb = extract_http_verb(command)
-    
-    headers_str = f"headers = {str(headers)}" if headers else ""
+
+    headers_str = (
+        "headers = {}".format(
+            str(headers)
+        )
+        if headers
+        else ""
+    )
     datas_str = f"datas = {str(datas)}" if datas else ""
-    requests_str = f"request.{verb}('{url}'%s%s)".strip() % (', headers=headers' if headers else '',
-                                                       ', data=datas' if datas else '' )
+    requests_str = f"requests.{verb}('{url}'%s%s)".strip() % (
+        ", headers=headers" if headers else "",
+        ", data=datas" if datas else "",
+    )
 
     to_return = f"""
 import requests
 
 {headers_str}
 {datas_str}
-
-{requests_str}
-
+response = {requests_str}
     """.strip()
     print(to_return)
     return to_return
+
 
 if __name__ == "__main__":
     # extract_headers(CURL_EXAMPLES[0])
