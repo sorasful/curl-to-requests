@@ -4,6 +4,7 @@ from curl_to_requests import (
     extract_headers,
     extract_datas,
     extract_http_verb,
+    extract_cookies,
     has_datas,
     convert_curl_to_requests,
     parse_args
@@ -95,8 +96,12 @@ def test_extract_http_verb():
 
 
 def test_extract_cookies():
-    # TODO: add cookies
-    pass
+    curl_with_cookies = "curl 'http://www.google.com/' -H 'Cache-Control: max-age=0' -H 'Cookie: _ga=cookie1; _gid=cookie2; _gat=1' --compressed"
+    cookies = {'_ga': 'cookie1',
+                '_gid': 'cookie2',
+                '_gat': '1'}
+    
+    assert extract_cookies(curl_with_cookies) == cookies
 
 
 def test_convert_curl_to_request():
@@ -104,14 +109,14 @@ def test_convert_curl_to_request():
     result = """
 import requests
 
+
 headers = {'Origin': 'http://lolilol.net', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'en-US,en;q=0.8', 'Accept': '*/*'}
 
 response = requests.post('http://lolilol.net/', headers=headers)
     """.strip()
 
-    # TODO make good looking
     assert convert_curl_to_requests(command) == result
 
 def test_argparse():
+    # TODO:
     pass
-    

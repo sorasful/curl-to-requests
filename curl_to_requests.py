@@ -63,8 +63,12 @@ def extract_cookies(command):
     cookies = re.search(cookies_pattern, command)
 
     results = {}
+    if cookies is not None:
+        for x in cookies.group(1).split(';'):
+            key, value = x.split('=')
+            results[key.strip()] = value.strip()
     # TODO
-    raise NotImplemented
+    return results
 
 def extract_http_verb(command):
     """ Function to extract the HTTP verb from a curl command. """
@@ -96,6 +100,7 @@ def convert_curl_to_requests(command):
     headers = extract_headers(command)
     datas = extract_datas(command)
     verb = extract_http_verb(command)
+    cookies = extract_cookies(command)
 
     headers_str = (
         "headers = {}".format(
@@ -104,6 +109,15 @@ def convert_curl_to_requests(command):
         if headers
         else ""
     )
+
+    cookies_str = (
+        "cookies = {}".format(
+            str(cookies)
+        )
+        if cookies
+        else ""
+    )
+
     datas_str = f"datas = {str(datas)}" if datas else ""
     requests_str = f"requests.{verb}('{url}'%s%s)".strip() % (
         ", headers=headers" if headers else "",
@@ -113,6 +127,7 @@ def convert_curl_to_requests(command):
     to_return = f"""
 import requests
 
+{cookies_str}
 {headers_str}
 {datas_str}
 response = {requests_str}
@@ -128,7 +143,5 @@ def parse_args(args):
 
 
 if __name__ == "__main__":
-    # extract_headers(CURL_EXAMPLES[0])
-    # convert_curl_to_requests()
     command = parse_args(sys.argv[1:])
     print(convert_curl_to_requests(command))
